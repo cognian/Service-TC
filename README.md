@@ -9,17 +9,23 @@ Update `./config.json`:
 ```json
 {
   "scheduleTime": "06:00",
-  "webServiceUrl": "https://example.com/health"
+  "webServiceUrl": "https://example.com/health",
+  "bccrWebServiceUrl": "https://example.com/bccr/exchange-rate",
+  "bccrApiToken": "your-api-token"
 }
 ```
 
 - `scheduleTime`: daily execution time in `HH:mm` (24h format).
 - `webServiceUrl`: URL called once per day at the configured time.
+- `bccrWebServiceUrl`: BCCR exchange-rate endpoint URL used by `BccrExchangeRateProvider`.
+- `bccrApiToken`: API token sent as a bearer token by `BccrExchangeRateProvider`.
 
 Environment variables override file values:
 
 - `SCHEDULE_TIME`
 - `WEB_SERVICE_URL`
+- `BCCR_WEB_SERVICE_URL`
+- `BCCR_API_TOKEN`
 
 ## Run
 
