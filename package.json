@@ -1,0 +1,11 @@
+{
+  "name": "service-tc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node application designed to run as a Windows service and call a web service daily.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  }
+}
