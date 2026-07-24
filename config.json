@@ -2,5 +2,10 @@
   "scheduleTime": "06:00",
   "webServiceUrl": "https://example.com/health",
   "bccrWebServiceUrl": "https://example.com/bccr/exchange-rate",
-  "bccrApiToken": "your-api-token"
+  "bccrApiToken": "your-api-token",
+  "sapSignInUrl": "https://your-sap-host:50000/b1s/v1/Login",
+  "sapCompanyDB": "your-company-db",
+  "sapUsername": "your-username",
+  "sapPassword": "your-password",
+  "sapUpdateUrl": "https://your-sap-host:50000/b1s/v1/SBOBobService_GetCurrencyRate"
 }
