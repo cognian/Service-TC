@@ -39,3 +39,30 @@ test('fetchExchangeRate maps BCCR payload to date/rate list', async () => {
     global.fetch = originalFetch;
   }
 });
+
+test('fetchExchangeRate fails when exchange rate is invalid', async () => {
+  const originalFetch = global.fetch;
+  const provider = new BccrExchangeRateProvider('https://example.com/bccr', 'token-123');
+
+  global.fetch = (async () =>
+    new Response(
+      JSON.stringify({
+        estado: true,
+        datos: [
+          {
+            series: [{ fecha: '2026-07-21', valorDatoPorPeriodo: 'not-a-number' }]
+          }
+        ]
+      }),
+      { status: 200 }
+    )) as typeof fetch;
+
+  try {
+    await assert.rejects(
+      provider.fetchExchangeRate(new Date('2026-07-21'), new Date('2026-07-23')),
+      /Invalid BCCR exchange rate value/
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
+});

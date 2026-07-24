@@ -46,11 +46,16 @@ export class BccrExchangeRateProvider implements IExchangeRateProvider {
       throw new Error(payload.mensaje || 'BCCR service returned an unsuccessful response.');
     }
 
-    return (payload.datos ?? [])
-      .flatMap((item) => item.series ?? [])
-      .map((seriesItem) => ({
-        date: new Date(seriesItem.fecha),
-        rate: Number(seriesItem.valorDatoPorPeriodo)
-      }));
+    return (payload.datos ?? []).flatMap((item) => item.series ?? []).map((seriesItem) => {
+      const rate = Number(seriesItem.valorDatoPorPeriodo);
+      if (!Number.isFinite(rate)) {
+        throw new Error(`Invalid BCCR exchange rate value for date ${seriesItem.fecha}.`);
+      }
+
+      return {
+        date: new Date(`${seriesItem.fecha}T00:00:00.000Z`),
+        rate
+      };
+    });
   }
 }
