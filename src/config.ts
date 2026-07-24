@@ -5,6 +5,7 @@ const CONFIG_PATH = path.resolve(__dirname, '..', 'config.json');
 
 export interface AppConfig {
   scheduleTime: string;
+  forecastDays: number;
   webServiceUrl: string;
   bccrWebServiceUrl?: string;
   bccrApiToken?: string;
@@ -23,6 +24,7 @@ export function loadConfig(): AppConfig {
     : {};
 
   const scheduleTime = process.env.SCHEDULE_TIME || fileConfig.scheduleTime || '06:00';
+  const forecastDays = Number(process.env.FORECAST_DAYS ?? fileConfig.forecastDays ?? 5);
   const webServiceUrl = process.env.WEB_SERVICE_URL || fileConfig.webServiceUrl;
   const bccrWebServiceUrl = process.env.BCCR_WEB_SERVICE_URL || fileConfig.bccrWebServiceUrl;
   const bccrApiToken = process.env.BCCR_API_TOKEN || fileConfig.bccrApiToken;
@@ -32,12 +34,17 @@ export function loadConfig(): AppConfig {
   const sapPassword = process.env.SAP_PASSWORD || fileConfig.sapPassword;
   const sapUpdateUrl = process.env.SAP_UPDATE_URL || fileConfig.sapUpdateUrl;
 
+  if (!Number.isInteger(forecastDays) || forecastDays < 0) {
+    throw new Error('forecastDays must be a non-negative integer.');
+  }
+
   if (!webServiceUrl) {
     throw new Error('Missing webServiceUrl. Provide it in config.json or WEB_SERVICE_URL.');
   }
 
   return {
     scheduleTime,
+    forecastDays,
     webServiceUrl,
     bccrWebServiceUrl,
     bccrApiToken,
