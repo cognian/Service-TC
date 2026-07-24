@@ -6,6 +6,8 @@ const CONFIG_PATH = path.resolve(__dirname, '..', 'config.json');
 export interface AppConfig {
   scheduleTime: string;
   webServiceUrl: string;
+  bccrWebServiceUrl?: string;
+  bccrApiToken?: string;
 }
 
 type ConfigFile = Partial<AppConfig>;
@@ -17,6 +19,8 @@ export function loadConfig(): AppConfig {
 
   const scheduleTime = process.env.SCHEDULE_TIME || fileConfig.scheduleTime || '06:00';
   const webServiceUrl = process.env.WEB_SERVICE_URL || fileConfig.webServiceUrl;
+  const bccrWebServiceUrl = process.env.BCCR_WEB_SERVICE_URL || fileConfig.bccrWebServiceUrl;
+  const bccrApiToken = process.env.BCCR_API_TOKEN || fileConfig.bccrApiToken;
 
   if (!webServiceUrl) {
     throw new Error('Missing webServiceUrl. Provide it in config.json or WEB_SERVICE_URL.');
@@ -24,6 +28,8 @@ export function loadConfig(): AppConfig {
 
   return {
     scheduleTime,
-    webServiceUrl
+    webServiceUrl,
+    bccrWebServiceUrl,
+    bccrApiToken
   };
 }

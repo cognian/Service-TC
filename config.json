@@ -1,4 +1,6 @@
 {
   "scheduleTime": "06:00",
-  "webServiceUrl": "https://example.com/health"
+  "webServiceUrl": "https://example.com/health",
+  "bccrWebServiceUrl": "https://example.com/bccr/exchange-rate",
+  "bccrApiToken": "your-api-token"
 }
