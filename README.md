@@ -4,7 +4,7 @@ Node application designed to run as a Windows service. It schedules a daily call
 
 ## Configuration
 
-Update `/home/runner/work/Service-TC/Service-TC/config.json`:
+Update `./config.json`:
 
 ```json
 {
