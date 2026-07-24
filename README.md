@@ -1,6 +1,6 @@
 # Service-TC
 
-Node application designed to run as a Windows service. It schedules a daily call to a configured Web Service.
+TypeScript application designed to run as a Windows service. It schedules a daily call to a configured Web Service.
 
 ## Configuration
 
@@ -27,4 +27,4 @@ Environment variables override file values:
 npm start
 ```
 
-To run as a Windows service, install and register this Node process with your preferred Windows service manager (for example NSSM or `sc.exe`) and point it to `node src/index.js`.
+To run as a Windows service, install and register this Node process with your preferred Windows service manager (for example NSSM or `sc.exe`) and point it to `npm start` (or build first and run `node dist/index.js`).

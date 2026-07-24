@@ -1,11 +1,18 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 const CONFIG_PATH = path.resolve(__dirname, '..', 'config.json');
 
-function loadConfig() {
-  const fileConfig = fs.existsSync(CONFIG_PATH)
-    ? JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+export interface AppConfig {
+  scheduleTime: string;
+  webServiceUrl: string;
+}
+
+type ConfigFile = Partial<AppConfig>;
+
+export function loadConfig(): AppConfig {
+  const fileConfig: ConfigFile = fs.existsSync(CONFIG_PATH)
+    ? (JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) as ConfigFile)
     : {};
 
   const scheduleTime = process.env.SCHEDULE_TIME || fileConfig.scheduleTime || '06:00';
@@ -20,7 +27,3 @@ function loadConfig() {
     webServiceUrl
   };
 }
-
-module.exports = {
-  loadConfig
-};

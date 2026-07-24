@@ -1,7 +1,7 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
+import assert from 'node:assert/strict';
+import test from 'node:test';
 
-const { parseTimeString, millisecondsUntilNextRun } = require('../src/scheduler');
+import { millisecondsUntilNextRun, parseTimeString } from '../src/scheduler';
 
 test('parseTimeString parses valid HH:mm', () => {
   assert.deepEqual(parseTimeString('06:00'), { hours: 6, minutes: 0 });

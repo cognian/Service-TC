@@ -1,4 +1,4 @@
-async function callWebService(url) {
+export async function callWebService(url: string): Promise<Response> {
   const response = await fetch(url, { method: 'GET' });
 
   if (!response.ok) {
@@ -7,7 +7,3 @@ async function callWebService(url) {
 
   return response;
 }
-
-module.exports = {
-  callWebService
-};

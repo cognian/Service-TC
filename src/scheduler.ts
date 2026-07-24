@@ -1,4 +1,9 @@
-function parseTimeString(timeText) {
+interface ParsedTime {
+  hours: number;
+  minutes: number;
+}
+
+export function parseTimeString(timeText: string): ParsedTime {
   const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(timeText);
   if (!match) {
     throw new Error(`Invalid scheduleTime \"${timeText}\". Expected HH:mm.`);
@@ -10,7 +15,7 @@ function parseTimeString(timeText) {
   };
 }
 
-function millisecondsUntilNextRun(timeText, now = new Date()) {
+export function millisecondsUntilNextRun(timeText: string, now: Date = new Date()): number {
   const { hours, minutes } = parseTimeString(timeText);
   const next = new Date(now);
   next.setHours(hours, minutes, 0, 0);
@@ -22,10 +27,14 @@ function millisecondsUntilNextRun(timeText, now = new Date()) {
   return next.getTime() - now.getTime();
 }
 
-function scheduleDailyTask(timeText, task, nowProvider = () => new Date()) {
-  let timer;
+export function scheduleDailyTask(
+  timeText: string,
+  task: () => Promise<void>,
+  nowProvider: () => Date = () => new Date()
+): () => void {
+  let timer: NodeJS.Timeout | undefined;
 
-  const scheduleNext = () => {
+  const scheduleNext = (): void => {
     const delay = millisecondsUntilNextRun(timeText, nowProvider());
     timer = setTimeout(async () => {
       try {
@@ -46,9 +55,3 @@ function scheduleDailyTask(timeText, task, nowProvider = () => new Date()) {
     }
   };
 }
-
-module.exports = {
-  parseTimeString,
-  millisecondsUntilNextRun,
-  scheduleDailyTask
-};

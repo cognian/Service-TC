@@ -1,11 +1,11 @@
-const { loadConfig } = require('./config');
-const { scheduleDailyTask, millisecondsUntilNextRun } = require('./scheduler');
-const { callWebService } = require('./webServiceClient');
+import { loadConfig } from './config';
+import { millisecondsUntilNextRun, scheduleDailyTask } from './scheduler';
+import { callWebService } from './webServiceClient';
 
-async function main() {
+async function main(): Promise<void> {
   const config = loadConfig();
 
-  const execute = async () => {
+  const execute = async (): Promise<void> => {
     console.log(`[Service-TC] Calling web service: ${config.webServiceUrl}`);
     await callWebService(config.webServiceUrl);
     console.log('[Service-TC] Web service call completed successfully.');
@@ -19,7 +19,7 @@ async function main() {
   scheduleDailyTask(config.scheduleTime, execute);
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error('[Service-TC] Startup failed:', error);
   process.exitCode = 1;
 });
