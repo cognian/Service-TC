@@ -1,5 +1,5 @@
 function parseTimeString(timeText) {
-  const match = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(timeText);
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(timeText);
   if (!match) {
     throw new Error(`Invalid scheduleTime \"${timeText}\". Expected HH:mm.`);
   }

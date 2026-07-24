@@ -10,6 +10,7 @@ test('parseTimeString parses valid HH:mm', () => {
 
 test('parseTimeString rejects invalid formats', () => {
   assert.throws(() => parseTimeString('24:00'), /Invalid scheduleTime/);
+  assert.throws(() => parseTimeString('6:00'), /Invalid scheduleTime/);
   assert.throws(() => parseTimeString('6:0'), /Invalid scheduleTime/);
   assert.throws(() => parseTimeString('abc'), /Invalid scheduleTime/);
 });
