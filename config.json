@@ -1,12 +1,20 @@
 {
   "scheduleTime": "06:00",
   "forecastDays": 5,
-  "webServiceUrl": "https://example.com/health",
   "bccrWebServiceUrl": "https://example.com/bccr/exchange-rate",
   "bccrApiToken": "your-api-token",
   "sapSignInUrl": "https://your-sap-host:50000/b1s/v1/Login",
-  "sapCompanyDB": "your-company-db",
-  "sapUsername": "your-username",
-  "sapPassword": "your-password",
-  "sapUpdateUrl": "https://your-sap-host:50000/b1s/v1/SBOBobService_GetCurrencyRate"
+  "sapUpdateUrl": "https://your-sap-host:50000/b1s/v1/SBOBobService_GetCurrencyRate",
+  "sapCompanies": [
+    {
+      "sapCompanyDB": "your-company-db-1",
+      "sapUsername": "your-username-1",
+      "sapPassword": "your-password-1"
+    },
+    {
+      "sapCompanyDB": "your-company-db-2",
+      "sapUsername": "your-username-2",
+      "sapPassword": "your-password-2"
+    }
+  ]
 }

@@ -11,22 +11,22 @@ async function main(): Promise<void> {
   }
   if (
     !config.sapSignInUrl ||
-    !config.sapCompanyDB ||
-    !config.sapUsername ||
-    !config.sapPassword ||
     !config.sapUpdateUrl
   ) {
-    throw new Error('Missing one or more SAP configuration fields.');
+    throw new Error('Missing sapSignInUrl or sapUpdateUrl in configuration.');
   }
 
   const provider = new BccrExchangeRateProvider(config.bccrWebServiceUrl, config.bccrApiToken);
-  const updater = new SapServiceLayerRateUpdater({
-    signInUrl: config.sapSignInUrl,
-    companyDB: config.sapCompanyDB,
-    username: config.sapUsername,
-    password: config.sapPassword,
-    updateUrl: config.sapUpdateUrl
-  });
+  const companyUpdaters = config.sapCompanies.map((company) => ({
+    companyDB: company.sapCompanyDB,
+    updater: new SapServiceLayerRateUpdater({
+      signInUrl: config.sapSignInUrl as string,
+      companyDB: company.sapCompanyDB,
+      username: company.sapUsername,
+      password: company.sapPassword,
+      updateUrl: config.sapUpdateUrl as string
+    })
+  }));
 
   const execute = async (): Promise<void> => {
     const today = new Date();
@@ -47,7 +47,13 @@ async function main(): Promise<void> {
       console.log(
         `[Service-TC] Updating rate for ${point.date.toISOString().slice(0, 10)}: ${point.rate}`
       );
-      await updater.updateRate(point.date, point.rate);
+
+      for (const companyUpdater of companyUpdaters) {
+        console.log(
+          `[Service-TC] Applying rate to company ${companyUpdater.companyDB} for ${point.date.toISOString().slice(0, 10)}.`
+        );
+        await companyUpdater.updater.updateRate(point.date, point.rate);
+      }
     }
 
     console.log('[Service-TC] All rates updated successfully.');
