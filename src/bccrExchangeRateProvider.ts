@@ -16,7 +16,7 @@ interface BccrExchangeRateResponse {
 }
 
 function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10).replaceAll('-', '/');
 }
 
 export class BccrExchangeRateProvider implements IExchangeRateProvider {
@@ -27,8 +27,9 @@ export class BccrExchangeRateProvider implements IExchangeRateProvider {
 
   async fetchExchangeRate(from: Date, to: Date): Promise<ExchangeRatePoint[]> {
     const requestUrl = new URL(this.serviceUrl);
-    requestUrl.searchParams.set('from', formatDate(from));
-    requestUrl.searchParams.set('to', formatDate(to));
+    requestUrl.searchParams.set('fechaInicio', formatDate(from));
+    requestUrl.searchParams.set('fechaFin', formatDate(to));
+    requestUrl.searchParams.set('idioma', 'ES');
 
     const response = await fetch(requestUrl, {
       method: 'GET',

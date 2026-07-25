@@ -35,17 +35,18 @@ export class SapServiceLayerRateUpdater implements IExchangeRateUpdater {
       );
     }
 
-    const setCookieHeaders = signInResponse.headers.getSetCookie();
-    if (setCookieHeaders.length === 0) {
+    const setCookieHeaders = signInResponse.headers.get('set-cookie');
+    if (!setCookieHeaders) {
       throw new Error('SAP sign-in did not return any cookies.');
     }
 
     const cookieHeader = setCookieHeaders
-      .map((c) => c.split(';')[0])
+      .split(',')
+      .map((c: any) => c.split(';')[0])
       .join('; ');
 
     const updateResponse = await fetch(this.config.updateUrl, {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Cookie: cookieHeader
