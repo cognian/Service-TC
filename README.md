@@ -25,7 +25,18 @@ Update `./config.json`:
       "sapUsername": "userB",
       "sapPassword": "passwordB"
     }
-  ]
+  ],
+  "notificationEmail": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "username": "mailer-user",
+    "password": "mailer-password",
+    "from": "service-tc@example.com",
+    "to": ["ops@example.com"],
+    "ccs": ["finance@example.com"],
+    "bccs": ["audit@example.com"]
+  }
 }
 ```
 
@@ -36,6 +47,7 @@ Update `./config.json`:
 - `sapSignInUrl`: SAP Service Layer login endpoint.
 - `sapUpdateUrl`: SAP Service Layer rate update endpoint.
 - `sapCompanies`: array of companies to update. Each company must include `sapCompanyDB`, `sapUsername`, and `sapPassword`.
+- `notificationEmail`: optional SMTP settings used to send a summary email after a successful synchronization. If omitted, no email is sent.
 
 The service fetches exchange rates once per run and applies each rate to every configured SAP company.
 
@@ -48,6 +60,7 @@ Environment variables override file values:
 - `SAP_SIGN_IN_URL`
 - `SAP_UPDATE_URL`
 - `SAP_COMPANIES_JSON` (JSON array with company credentials)
+- `NOTIFICATION_EMAIL_JSON` (JSON object with the same shape as `notificationEmail`)
 
 Backward-compatible single-company environment variables are still accepted:
 

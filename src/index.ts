@@ -1,5 +1,6 @@
 import { loadConfig } from './config';
 import { BccrExchangeRateProvider } from './bccrExchangeRateProvider';
+import { executeExchangeRateSync } from './exchangeRateSync';
 import { SapServiceLayerRateUpdater } from './sapServiceLayerRateUpdater';
 import { millisecondsUntilNextRun, scheduleDailyTask } from './scheduler';
 
@@ -29,34 +30,12 @@ async function main(): Promise<void> {
   }));
 
   const execute = async (): Promise<void> => {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    // toDate is inclusive: forecastDays=0 fetches today only, forecastDays=5 fetches today + 5 days.
-    const toDate = new Date(today);
-    toDate.setUTCDate(today.getUTCDate() + config.forecastDays);
-
-    console.log(
-      `[Service-TC] Fetching BCCR exchange rates from ${today.toISOString().slice(0, 10)} to ${toDate.toISOString().slice(0, 10)}.`
-    );
-
-    const rates = await provider.fetchExchangeRate(today, toDate);
-    console.log(`[Service-TC] Received ${rates.length} rate(s) from BCCR.`);
-
-    for (const point of rates) {
-      console.log(
-        `[Service-TC] Updating rate for ${point.date.toISOString().slice(0, 10)}: ${point.rate}`
-      );
-
-      for (const companyUpdater of companyUpdaters) {
-        console.log(
-          `[Service-TC] Applying rate to company ${companyUpdater.companyDB} for ${point.date.toISOString().slice(0, 10)}.`
-        );
-        await companyUpdater.updater.updateRate(point.date, point.rate);
-      }
-    }
-
-    console.log('[Service-TC] All rates updated successfully.');
+    await executeExchangeRateSync({
+      forecastDays: config.forecastDays,
+      provider,
+      companyUpdaters,
+      notificationEmail: config.notificationEmail
+    });
   };
 
   const firstRunInMs = millisecondsUntilNextRun(config.scheduleTime);

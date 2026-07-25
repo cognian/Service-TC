@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "npm run build && node dist/index.js",
     "start:dev": "tsx src/index2.ts",
-    "test": "node --import tsx --test test/**/*.test.ts",
+    "test": "tsx --test test/*.test.ts",
     "service:install": "npm run build && node dist/windowsService.js install",
     "service:start": "npm run build && node dist/windowsService.js start",
     "service:stop": "npm run build && node dist/windowsService.js stop",
@@ -17,10 +17,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
+    "@types/nodemailer": "^8.0.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "node-windows": "^1.0.0-beta.8"
+    "node-windows": "^1.0.0-beta.8",
+    "nodemailer": "^9.0.3"
   }
 }
