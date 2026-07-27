@@ -8,11 +8,18 @@ export interface ExchangeRateSyncSummary {
   rateCount: number;
   companyCount: number;
   updateCount: number;
+  errorCount: number;
   completedAt: string;
   updates: Array<{
     companyDB: string;
     date: string;
     rate: number;
+  }>;
+  errors: Array<{
+    companyDB: string;
+    date: string;
+    rate: number;
+    error: string;
   }>;
 }
 
@@ -32,6 +39,7 @@ function buildSummaryText(summary: ExchangeRateSyncSummary): string {
     `Rates fetched: ${summary.rateCount}`,
     `Companies updated: ${summary.companyCount}`,
     `Total SAP updates: ${summary.updateCount}`,
+    `Failed SAP updates: ${summary.errorCount}`,
     `Completed at: ${summary.completedAt}`,
     ''
   ];
@@ -44,6 +52,16 @@ function buildSummaryText(summary: ExchangeRateSyncSummary): string {
   lines.push('Applied updates:');
   for (const update of summary.updates) {
     lines.push(`- ${update.companyDB} | ${update.date} | ${update.rate}`);
+  }
+
+  if (summary.errors.length > 0) {
+    lines.push('');
+    lines.push('Failed updates:');
+    for (const failedUpdate of summary.errors) {
+      lines.push(
+        `- ${failedUpdate.companyDB} | ${failedUpdate.date} | ${failedUpdate.rate} | ${failedUpdate.error}`
+      );
+    }
   }
 
   return lines.join('\n');
@@ -104,6 +122,21 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
                 <td>${escapeHtml(row.firstDate)}</td>
                 <td>${escapeHtml(row.lastDate)}</td>
                 <td>${row.latestRate}</td>
+              </tr>`
+          )
+          .join('');
+
+  const errorRowsHtml =
+    summary.errors.length === 0
+      ? '<tr><td colspan="4" class="empty-row">No update errors.</td></tr>'
+      : summary.errors
+          .map(
+            (failedUpdate) => `
+              <tr>
+                <td>${escapeHtml(failedUpdate.companyDB)}</td>
+                <td>${escapeHtml(failedUpdate.date)}</td>
+                <td>${failedUpdate.rate}</td>
+                <td>${escapeHtml(failedUpdate.error)}</td>
               </tr>`
           )
           .join('');
@@ -261,6 +294,10 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
               <td>${summary.updateCount}</td>
             </tr>
             <tr>
+              <td>Failed SAP updates</td>
+              <td>${summary.errorCount}</td>
+            </tr>
+            <tr>
               <td>Completed at</td>
               <td>${completedAt}</td>
             </tr>
@@ -280,6 +317,22 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
               </tr>
             </thead>
             <tbody>${companyRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h2 class="companies-title">Update Errors</h2>
+          <table class="companies" role="table" aria-label="Update errors">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Date</th>
+                <th>Rate</th>
+                <th>Error</th>
+              </tr>
+            </thead>
+            <tbody>${errorRowsHtml}
             </tbody>
           </table>
         </div>
