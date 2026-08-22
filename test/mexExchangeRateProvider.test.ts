@@ -6,12 +6,18 @@ import { MexExchangeRateProvider } from '../src/Infrastructure/exchangeRateProvi
 test('fetchExchangeRate maps Banxico payload to date/rate list', async () => {
   const originalFetch = global.fetch;
   const provider = new MexExchangeRateProvider(
-    'https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF43718/datos/oportuno?token=url-token'
+    'https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos',
+    'header-token'
   );
 
-  global.fetch = (async (input: string | URL | Request) => {
+  global.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
-    assert.equal(url.searchParams.get('token'), 'url-token');
+    assert.equal(
+      url.href,
+      'https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos/2026-08-21/2026-08-21'
+    );
+    assert.equal(url.search, '');
+    assert.equal(new Headers(init?.headers).get('Bmx-Token'), 'header-token');
     return new Response(
       JSON.stringify({
         bmx: {

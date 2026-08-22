@@ -34,19 +34,24 @@ function parseDate(value: string): Date {
   return date;
 }
 
+function formatRequestDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
 export class MexExchangeRateProvider implements IExchangeRateProvider {
   constructor(
     private readonly serviceUrl: string,
     private readonly apiToken?: string
   ) {}
 
-  async fetchExchangeRate(_from: Date, _to: Date): Promise<ExchangeRatePoint[]> {
+  async fetchExchangeRate(from: Date, to: Date): Promise<ExchangeRatePoint[]> {
     const requestUrl = new URL(this.serviceUrl);
-    if (this.apiToken) {
-      requestUrl.searchParams.set('token', this.apiToken);
-    }
+    requestUrl.pathname = `${requestUrl.pathname.replace(/\/$/, '')}/${formatRequestDate(from)}/${formatRequestDate(to)}`;
 
-    const response = await fetch(requestUrl, { method: 'GET' });
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      headers: this.apiToken ? { 'Bmx-Token': this.apiToken } : undefined
+    });
 
     if (!response.ok) {
       throw new Error(`MEX service returned ${response.status} ${response.statusText}`);
