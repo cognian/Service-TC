@@ -4,6 +4,7 @@ interface ServiceOptions {
   name: string;
   description: string;
   script: string;
+  scriptOptions?: string;
   workingDirectory: string;
   wait: number;
   grow: number;
@@ -22,7 +23,11 @@ interface NodeWindowsModule {
   Service: new (options: ServiceOptions) => WindowsService;
 }
 
-function createService(): WindowsService {
+function quoteCommandLineArgument(value: string): string {
+  return `"${value.replace(/"/g, '\\"')}"`;
+}
+
+function createService(configPath: string): WindowsService {
   const nodeWindows = require('node-windows') as NodeWindowsModule;
 
   return new nodeWindows.Service({
@@ -31,6 +36,7 @@ function createService(): WindowsService {
       process.env.SERVICE_DESCRIPTION ||
       'Daily exchange-rate synchronization service for SAP Service Layer.',
     script: path.resolve(__dirname, 'index.js'),
+    scriptOptions: quoteCommandLineArgument(configPath),
     workingDirectory: path.resolve(__dirname, '..'),
     wait: 1,
     grow: 0.25,
@@ -48,7 +54,11 @@ function run(): void {
   ensureWindows();
 
   const action = (process.argv[2] || 'install').toLowerCase();
-  const service = createService();
+  const configPath = path.resolve(
+    process.cwd(),
+    process.argv[3] || path.resolve(__dirname, '..', '..', 'config.json')
+  );
+  const service = createService(configPath);
 
   service.on('error', () => {
     console.error('[Service-TC] Service operation failed.');

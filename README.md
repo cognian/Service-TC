@@ -74,6 +74,14 @@ Backward-compatible single-company environment variables are still accepted:
 npm start
 ```
 
+To use a different configuration file, pass its path after `--`:
+
+```bash
+npm start -- ./config.production.json
+```
+
+The path can be relative to the current working directory or absolute. If it is omitted, `./config.json` is used.
+
 To run as a Windows service, install and register this Node process with your preferred Windows service manager (for example NSSM or `sc.exe`) and point it to `npm start` (or build first and run `node dist/EntryPoint/index.js`).
 
 ## Windows Service
@@ -89,6 +97,14 @@ npm run service:stop
 npm run service:restart
 npm run service:uninstall
 ```
+
+To install the service with a different configuration file, pass its path after the action:
+
+```bash
+npm run service:install -- ./config.production.json
+```
+
+The selected configuration path is stored in the Windows service command. If omitted, the project-root `config.json` is used.
 
 Notes:
 

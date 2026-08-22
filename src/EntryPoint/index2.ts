@@ -5,7 +5,7 @@ import { createExchangeRateProvider } from '../Infrastructure/exchangeRateProvid
 import { SapServiceLayerRateUpdater } from '../Infrastructure/exchangeRateUpdater/sapServiceLayerRateUpdater';
 
 async function main(): Promise<void> {
-  const config = loadConfig();
+  const config = loadConfig(process.argv[2]);
 
   if (
     !config.sapSignInUrl ||

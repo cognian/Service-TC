@@ -8,7 +8,7 @@ import {
   SapCompanyCredentials
 } from '../Models/config';
 
-const CONFIG_PATH = path.resolve(__dirname, '..', '..', 'config.json');
+const DEFAULT_CONFIG_PATH = path.resolve(process.cwd(), 'config.json');
 
 export type {
   AppConfig,
@@ -181,9 +181,10 @@ export function validateNotificationEmailConfig(
   };
 }
 
-export function loadConfig(): AppConfig {
-  const fileConfig: ConfigFile = fs.existsSync(CONFIG_PATH)
-    ? (JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) as ConfigFile)
+export function loadConfig(configPath = DEFAULT_CONFIG_PATH): AppConfig {
+  const resolvedConfigPath = path.resolve(configPath);
+  const fileConfig: ConfigFile = fs.existsSync(resolvedConfigPath)
+    ? (JSON.parse(fs.readFileSync(resolvedConfigPath, 'utf8')) as ConfigFile)
     : {};
 
   const scheduleTime = process.env.SCHEDULE_TIME || fileConfig.scheduleTime || '06:00';
