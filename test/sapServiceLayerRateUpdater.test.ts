@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { SapServiceLayerRateUpdater } from '../src/sapServiceLayerRateUpdater';
+import { SapServiceLayerRateUpdater } from '../src/Infrastructure/exchangeRateUpdater/sapServiceLayerRateUpdater';
 
 const CONFIG = {
   signInUrl: 'https://sap.example.com/b1s/v1/Login',

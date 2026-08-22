@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { millisecondsUntilNextRun, parseTimeString } from '../src/scheduler';
+import { millisecondsUntilNextRun, parseTimeString } from '../src/EntryPoint/scheduler';
 
 test('parseTimeString parses valid HH:mm', () => {
   assert.deepEqual(parseTimeString('06:00'), { hours: 6, minutes: 0 });

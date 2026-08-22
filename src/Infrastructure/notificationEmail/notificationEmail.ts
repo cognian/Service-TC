@@ -1,27 +1,10 @@
 import nodemailer from 'nodemailer';
 
-import { NotificationEmailConfig } from './config';
+import { NotificationEmailSender } from '../../Application/interfaces/notificationEmail';
+import { NotificationEmailConfig } from '../../Models/config';
+import { ExchangeRateSyncSummary } from '../../Models/exchangeRateSync';
 
-export interface ExchangeRateSyncSummary {
-  fromDate: string;
-  toDate: string;
-  rateCount: number;
-  companyCount: number;
-  updateCount: number;
-  errorCount: number;
-  completedAt: string;
-  updates: Array<{
-    companyDB: string;
-    date: string;
-    rate: number;
-  }>;
-  errors: Array<{
-    companyDB: string;
-    date: string;
-    rate: number;
-    error: string;
-  }>;
-}
+export type { ExchangeRateSyncSummary } from '../../Models/exchangeRateSync';
 
 interface CompanySummaryRow {
   companyDB: string;
@@ -344,15 +327,14 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
 </html>`;
 }
 
-export async function sendNotificationEmail(
-  config: NotificationEmailConfig,
-  summary: ExchangeRateSyncSummary
-): Promise<void> {
+export class NodemailerNotificationEmailSender implements NotificationEmailSender {
+  async send(config: NotificationEmailConfig, summary: ExchangeRateSyncSummary): Promise<void> {
   console.log('[Service-TC] Preparing to send notification email...');
   const transporter = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
+    // host: config.host,
+    // port: config.port,
+    // secure: config.secure,
+    service: 'gmail',
     auth:
       config.username && config.password
         ? {
@@ -375,4 +357,5 @@ export async function sendNotificationEmail(
     html: buildSummaryHtml(summary)
   });
   console.log('[Service-TC] Notification email sent successfully.');
+  }
 }

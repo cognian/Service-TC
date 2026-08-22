@@ -1,4 +1,4 @@
-import { IExchangeRateUpdater } from './exchangeRateUpdater';
+import { IExchangeRateUpdater } from '../../Application/interfaces/exchangeRateUpdater';
 
 export interface SapServiceLayerConfig {
   signInUrl: string;

@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "Node application designed to run as a Windows service and call a web service daily.",
-  "main": "dist/index.js",
+  "main": "dist/EntryPoint/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "npm run build && node dist/index.js",
-    "start:dev": "tsx src/index2.ts",
+    "start": "npm run build && node dist/EntryPoint/index.js",
+    "start:dev": "tsx src/EntryPoint/index2.ts",
     "test": "tsx --test test/*.test.ts",
-    "service:install": "npm run build && node dist/windowsService.js install",
-    "service:start": "npm run build && node dist/windowsService.js start",
-    "service:stop": "npm run build && node dist/windowsService.js stop",
-    "service:restart": "npm run build && node dist/windowsService.js restart",
-    "service:uninstall": "npm run build && node dist/windowsService.js uninstall"
+    "service:install": "npm run build && node dist/EntryPoint/windowsService.js install",
+    "service:start": "npm run build && node dist/EntryPoint/windowsService.js start",
+    "service:stop": "npm run build && node dist/EntryPoint/windowsService.js stop",
+    "service:restart": "npm run build && node dist/EntryPoint/windowsService.js restart",
+    "service:uninstall": "npm run build && node dist/EntryPoint/windowsService.js uninstall"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",

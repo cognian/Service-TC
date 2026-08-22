@@ -1,4 +1,5 @@
-import { ExchangeRatePoint, IExchangeRateProvider } from './exchangeRateProvider';
+import { ExchangeRatePoint } from '../../Models/exchangeRate';
+import { IExchangeRateProvider } from '../../Application/interfaces/exchangeRateProvider';
 
 interface HnbIndicadorItem {
   Fecha: string;

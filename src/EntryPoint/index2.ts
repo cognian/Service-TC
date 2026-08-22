@@ -1,8 +1,8 @@
-import { loadConfig } from './config';
-import { executeExchangeRateSync } from './exchangeRateSync';
-import { createExchangeRateProvider } from './exchangeRateProviderFactory';
-import { SapServiceLayerRateUpdater } from './sapServiceLayerRateUpdater';
-import { millisecondsUntilNextRun, scheduleDailyTask } from './scheduler';
+import { executeExchangeRateSync } from '../Application/use-cases/exchangeRateSync';
+import { NodemailerNotificationEmailSender } from '../Infrastructure/notificationEmail/notificationEmail';
+import { loadConfig } from '../Infrastructure/config';
+import { createExchangeRateProvider } from '../Infrastructure/exchangeRateProvider/exchangeRateProviderFactory';
+import { SapServiceLayerRateUpdater } from '../Infrastructure/exchangeRateUpdater/sapServiceLayerRateUpdater';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -30,16 +30,12 @@ async function main(): Promise<void> {
     await executeExchangeRateSync({
       forecastDays: config.forecastDays,
       companyUpdaters,
-      notificationEmail: config.notificationEmail
+      notificationEmail: config.notificationEmail,
+      notificationEmailSender: new NodemailerNotificationEmailSender()
     });
   };
 
-  const firstRunInMs = millisecondsUntilNextRun(config.scheduleTime);
-  console.log(
-    `[Service-TC] Scheduled daily run at ${config.scheduleTime}. First run in ${Math.round(firstRunInMs / 1000)} seconds.`
-  );
-
-  scheduleDailyTask(config.scheduleTime, execute);
+  await execute(); // Execute immediately on startup
 }
 
 main().catch((error: unknown) => {

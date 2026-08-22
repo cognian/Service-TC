@@ -1,7 +1,8 @@
-import { NotificationEmailConfig } from './config';
-import { ExchangeRatePoint, IExchangeRateProvider } from './exchangeRateProvider';
-import { IExchangeRateUpdater } from './exchangeRateUpdater';
-import { ExchangeRateSyncSummary, sendNotificationEmail } from './notificationEmail';
+import { NotificationEmailConfig } from '../../Models/config';
+import { ExchangeRateSyncSummary } from '../../Models/exchangeRateSync';
+import { ExchangeRatePoint, IExchangeRateProvider } from '../interfaces/exchangeRateProvider';
+import { NotificationEmailSender } from '../interfaces/notificationEmail';
+import { IExchangeRateUpdater } from '../interfaces/exchangeRateUpdater';
 
 interface CompanyUpdater {
   companyDB: string;
@@ -20,10 +21,7 @@ interface ExecuteExchangeRateSyncOptions {
   notificationEmail?: NotificationEmailConfig;
   now?: Date;
   logger?: LoggerLike;
-  sendNotificationEmailFn?: (
-    config: NotificationEmailConfig,
-    summary: ExchangeRateSyncSummary
-  ) => Promise<void>;
+  notificationEmailSender?: NotificationEmailSender;
 }
 
 function formatDate(date: Date): string {
@@ -48,7 +46,7 @@ export async function executeExchangeRateSync({
   notificationEmail,
   now = new Date(),
   logger = console,
-  sendNotificationEmailFn = sendNotificationEmail
+  notificationEmailSender
 }: ExecuteExchangeRateSyncOptions): Promise<ExchangeRateSyncSummary> {
   const today = new Date(now);
   today.setUTCHours(0, 0, 0, 0);
@@ -144,7 +142,7 @@ export async function executeExchangeRateSync({
   if (notificationEmail) {
     try {
       logger.log('[Service-TC] Sending notification email...');
-      await sendNotificationEmailFn(notificationEmail, summary);
+      await notificationEmailSender?.send(notificationEmail, summary);
       logger.log('[Service-TC] Notification email sent successfully.');
     } catch (error: unknown) {
       logger.error('[Service-TC] Failed to send notification email:', error);

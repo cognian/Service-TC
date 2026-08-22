@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { executeExchangeRateSync } from '../src/exchangeRateSync';
-import { IExchangeRateUpdater } from '../src/exchangeRateUpdater';
+import { executeExchangeRateSync } from '../src/Application/use-cases/exchangeRateSync';
+import { IExchangeRateUpdater } from '../src/Application/interfaces/exchangeRateUpdater';
 
 test('executeExchangeRateSync sends a summary email when notificationEmail is configured', async () => {
   const updateCalls: Array<{ date: string; rate: number }> = [];
@@ -51,15 +51,17 @@ test('executeExchangeRateSync sends a summary email when notificationEmail is co
       log(): void {},
       error(): void {}
     },
-    sendNotificationEmailFn: async (config, notificationSummary) => {
-      sentSummaries.push({
-        config,
-        summary: {
-          updateCount: notificationSummary.updateCount,
-          rateCount: notificationSummary.rateCount,
-          errorCount: notificationSummary.errorCount
-        }
-      });
+    notificationEmailSender: {
+      send: async (config, notificationSummary) => {
+        sentSummaries.push({
+          config,
+          summary: {
+            updateCount: notificationSummary.updateCount,
+            rateCount: notificationSummary.rateCount,
+            errorCount: notificationSummary.errorCount
+          }
+        });
+      }
     }
   });
 
@@ -88,8 +90,10 @@ test('executeExchangeRateSync skips email when notificationEmail is not configur
       log(): void {},
       error(): void {}
     },
-    sendNotificationEmailFn: async () => {
-      emailSent = true;
+    notificationEmailSender: {
+      send: async () => {
+        emailSent = true;
+      }
     }
   });
 

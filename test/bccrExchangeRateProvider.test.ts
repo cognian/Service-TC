@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { BccrExchangeRateProvider } from '../src/bccrExchangeRateProvider';
+import { BccrExchangeRateProvider } from '../src/Infrastructure/exchangeRateProvider/bccrExchangeRateProvider';
 
 test('fetchExchangeRate maps BCCR payload to date/rate list', async () => {
   const originalFetch = global.fetch;

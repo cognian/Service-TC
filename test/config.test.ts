@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { validateNotificationEmailConfig } from '../src/config';
+import { validateNotificationEmailConfig } from '../src/Infrastructure/config';
 
 test('validateNotificationEmailConfig returns undefined when section is absent', () => {
   assert.equal(validateNotificationEmailConfig(undefined), undefined);

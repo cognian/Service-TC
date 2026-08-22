@@ -1,7 +1,7 @@
 import { BccrExchangeRateProvider } from './bccrExchangeRateProvider';
-import { ExchangeRateProviderConfig } from './config';
-import { IExchangeRateProvider } from './exchangeRateProvider';
 import { HnbExchangeRateProvider } from './hnbExchangeRateProvider';
+import { ExchangeRateProviderConfig } from '../../Models/config';
+import { IExchangeRateProvider } from '../../Application/interfaces/exchangeRateProvider';
 
 export function createExchangeRateProvider(config: ExchangeRateProviderConfig): IExchangeRateProvider {
   switch (config.type) {

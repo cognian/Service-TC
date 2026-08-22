@@ -74,7 +74,7 @@ Backward-compatible single-company environment variables are still accepted:
 npm start
 ```
 
-To run as a Windows service, install and register this Node process with your preferred Windows service manager (for example NSSM or `sc.exe`) and point it to `npm start` (or build first and run `node dist/index.js`).
+To run as a Windows service, install and register this Node process with your preferred Windows service manager (for example NSSM or `sc.exe`) and point it to `npm start` (or build first and run `node dist/EntryPoint/index.js`).
 
 ## Windows Service
 
