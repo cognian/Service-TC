@@ -95,6 +95,14 @@ function validateExchangeRateProviders(value: unknown): Record<string, ExchangeR
       }
 
       providers[key] = { type: 'hnb', webServiceUrl, apiToken };
+    } else if (providerConfig.type === 'mex') {
+      const webServiceUrl = typeof providerConfig.webServiceUrl === 'string' ? providerConfig.webServiceUrl : '';
+      const apiToken = typeof providerConfig.apiToken === 'string' ? providerConfig.apiToken : undefined;
+      if (!webServiceUrl) {
+        throw new Error(`exchangeRateProviders.${key} of type "mex" requires webServiceUrl.`);
+      }
+
+      providers[key] = { type: 'mex', webServiceUrl, apiToken };
     } else {
       throw new Error(`exchangeRateProviders.${key} has unsupported type "${String(providerConfig.type)}".`);
     }
@@ -207,6 +215,14 @@ export function loadConfig(): AppConfig {
       type: 'hnb',
       webServiceUrl: process.env.HNB_WEB_SERVICE_URL || exchangeRateProviders.hnb.webServiceUrl,
       apiToken: process.env.HNB_API_TOKEN || exchangeRateProviders.hnb.apiToken
+    };
+  }
+
+  if (exchangeRateProviders.mex?.type === 'mex') {
+    exchangeRateProviders.mex = {
+      type: 'mex',
+      webServiceUrl: process.env.MEX_WEB_SERVICE_URL || exchangeRateProviders.mex.webServiceUrl,
+      apiToken: process.env.MEX_API_TOKEN || exchangeRateProviders.mex.apiToken
     };
   }
 

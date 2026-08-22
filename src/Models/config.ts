@@ -17,9 +17,16 @@ export interface HnbExchangeRateProviderConfig {
   apiToken: string;
 }
 
+export interface MexExchangeRateProviderConfig {
+  type: 'mex';
+  webServiceUrl: string;
+  apiToken?: string;
+}
+
 export type ExchangeRateProviderConfig =
   | BccrExchangeRateProviderConfig
-  | HnbExchangeRateProviderConfig;
+  | HnbExchangeRateProviderConfig
+  | MexExchangeRateProviderConfig;
 
 export interface NotificationEmailConfig {
   host: string;
