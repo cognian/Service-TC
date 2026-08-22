@@ -1,15 +1,12 @@
 import { loadConfig } from './config';
-import { BccrExchangeRateProvider } from './bccrExchangeRateProvider';
 import { executeExchangeRateSync } from './exchangeRateSync';
+import { createExchangeRateProvider } from './exchangeRateProviderFactory';
 import { SapServiceLayerRateUpdater } from './sapServiceLayerRateUpdater';
 import { millisecondsUntilNextRun, scheduleDailyTask } from './scheduler';
 
 async function main(): Promise<void> {
   const config = loadConfig();
 
-  if (!config.bccrWebServiceUrl || !config.bccrApiToken) {
-    throw new Error('Missing bccrWebServiceUrl or bccrApiToken in configuration.');
-  }
   if (
     !config.sapSignInUrl ||
     !config.sapUpdateUrl
@@ -17,9 +14,9 @@ async function main(): Promise<void> {
     throw new Error('Missing sapSignInUrl or sapUpdateUrl in configuration.');
   }
 
-  const provider = new BccrExchangeRateProvider(config.bccrWebServiceUrl, config.bccrApiToken);
   const companyUpdaters = config.sapCompanies.map((company) => ({
     companyDB: company.sapCompanyDB,
+    provider: createExchangeRateProvider(config.exchangeRateProviders[company.exchangeRateProvider]),
     updater: new SapServiceLayerRateUpdater({
       signInUrl: config.sapSignInUrl as string,
       companyDB: company.sapCompanyDB,
@@ -32,7 +29,6 @@ async function main(): Promise<void> {
   const execute = async (): Promise<void> => {
     await executeExchangeRateSync({
       forecastDays: config.forecastDays,
-      provider,
       companyUpdaters,
       notificationEmail: config.notificationEmail
     });

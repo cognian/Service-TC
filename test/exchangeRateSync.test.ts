@@ -21,18 +21,23 @@ test('executeExchangeRateSync sends a summary email when notificationEmail is co
   const summary = await executeExchangeRateSync({
     forecastDays: 1,
     now: new Date('2026-07-25T12:00:00.000Z'),
-    provider: {
-      async fetchExchangeRate(from, to) {
-        fetchRanges.push({
-          from: from.toISOString().slice(0, 10),
-          to: to.toISOString().slice(0, 10)
-        });
-        return [
-          { date: new Date('2026-07-25T00:00:00.000Z'), rate: 500.25 }
-        ];
+    companyUpdaters: [
+      {
+        companyDB: 'SBODEMO',
+        provider: {
+          async fetchExchangeRate(from, to) {
+            fetchRanges.push({
+              from: from.toISOString().slice(0, 10),
+              to: to.toISOString().slice(0, 10)
+            });
+            return [
+              { date: new Date('2026-07-25T00:00:00.000Z'), rate: 500.25 }
+            ];
+          }
+        },
+        updater
       }
-    },
-    companyUpdaters: [{ companyDB: 'SBODEMO', updater }],
+    ],
     notificationEmail: {
       host: 'smtp.example.com',
       port: 587,
@@ -78,11 +83,6 @@ test('executeExchangeRateSync skips email when notificationEmail is not configur
   await executeExchangeRateSync({
     forecastDays: 0,
     now: new Date('2026-07-25T12:00:00.000Z'),
-    provider: {
-      async fetchExchangeRate() {
-        return [];
-      }
-    },
     companyUpdaters: [],
     logger: {
       log(): void {},
@@ -117,17 +117,18 @@ test('executeExchangeRateSync continues after update errors and reports failures
     }
   };
 
+  const sharedProvider = {
+    async fetchExchangeRate() {
+      return [{ date: new Date('2026-07-25T00:00:00.000Z'), rate: 498.1 }];
+    }
+  };
+
   const summary = await executeExchangeRateSync({
     forecastDays: 2,
     now: new Date('2026-07-25T12:00:00.000Z'),
-    provider: {
-      async fetchExchangeRate() {
-        return [{ date: new Date('2026-07-25T00:00:00.000Z'), rate: 498.1 }];
-      }
-    },
     companyUpdaters: [
-      { companyDB: 'SBODEMO_FAIL', updater: failingUpdater },
-      { companyDB: 'SBODEMO_OK', updater: okUpdater }
+      { companyDB: 'SBODEMO_FAIL', provider: sharedProvider, updater: failingUpdater },
+      { companyDB: 'SBODEMO_OK', provider: sharedProvider, updater: okUpdater }
     ],
     logger: {
       log(): void {},

@@ -1,10 +1,11 @@
 import { NotificationEmailConfig } from './config';
-import { IExchangeRateProvider } from './exchangeRateProvider';
+import { ExchangeRatePoint, IExchangeRateProvider } from './exchangeRateProvider';
 import { IExchangeRateUpdater } from './exchangeRateUpdater';
 import { ExchangeRateSyncSummary, sendNotificationEmail } from './notificationEmail';
 
 interface CompanyUpdater {
   companyDB: string;
+  provider: IExchangeRateProvider;
   updater: IExchangeRateUpdater;
 }
 
@@ -15,7 +16,6 @@ interface LoggerLike {
 
 interface ExecuteExchangeRateSyncOptions {
   forecastDays: number;
-  provider: IExchangeRateProvider;
   companyUpdaters: CompanyUpdater[];
   notificationEmail?: NotificationEmailConfig;
   now?: Date;
@@ -44,7 +44,6 @@ function formatError(error: unknown): string {
 
 export async function executeExchangeRateSync({
   forecastDays,
-  provider,
   companyUpdaters,
   notificationEmail,
   now = new Date(),
@@ -57,61 +56,75 @@ export async function executeExchangeRateSync({
   const toDate = new Date(today);
   toDate.setUTCDate(today.getUTCDate() + forecastDays);
 
-  const bccrFromDate = new Date(today);
-  const bccrToDate = new Date(today);
+  const fromDate = new Date(today);
+  const exchangeRateToDate = new Date(today);
 
-  logger.log(
-    `[Service-TC] Fetching BCCR exchange rates from ${formatDate(bccrFromDate)} to ${formatDate(bccrToDate)}.`
-  );
+  const ratesByProvider = new Map<IExchangeRateProvider, ExchangeRatePoint[]>();
 
-  const rates = await provider.fetchExchangeRate(bccrFromDate, bccrToDate);
-  logger.log(`[Service-TC] Received ${rates.length} rate(s) from BCCR.`);
+  async function getRatesForProvider(provider: IExchangeRateProvider): Promise<ExchangeRatePoint[]> {
+    const cached = ratesByProvider.get(provider);
+    if (cached) {
+      return cached;
+    }
+
+    logger.log(
+      `[Service-TC] Fetching exchange rates from ${formatDate(fromDate)} to ${formatDate(exchangeRateToDate)}.`
+    );
+    const rates = await provider.fetchExchangeRate(fromDate, exchangeRateToDate);
+    logger.log(`[Service-TC] Received ${rates.length} rate(s).`);
+    ratesByProvider.set(provider, rates);
+    return rates;
+  }
 
   const updates: ExchangeRateSyncSummary['updates'] = [];
   const errors: ExchangeRateSyncSummary['errors'] = [];
 
-  const todayRate = rates.find((point) => formatDate(point.date) === formatDate(today)) ?? rates[0];
+  for (const companyUpdater of companyUpdaters) {
+    const rates = await getRatesForProvider(companyUpdater.provider);
+    const todayRate = rates.find((point) => formatDate(point.date) === formatDate(today)) ?? rates[0];
 
-  if (todayRate) {
+    if (!todayRate) {
+      logger.log(
+        `[Service-TC] No exchange rate found for today for company ${companyUpdater.companyDB}. No updates were applied.`
+      );
+      continue;
+    }
+
     for (let offset = 0; offset <= forecastDays; offset += 1) {
       const targetDate = new Date(today);
       targetDate.setUTCDate(today.getUTCDate() + offset);
-      logger.log(`[Service-TC] Updating forecast date ${formatDate(targetDate)} with rate ${todayRate.rate}.`);
+      logger.log(
+        `[Service-TC] Applying rate to company ${companyUpdater.companyDB} for ${formatDate(targetDate)}.`
+      );
 
-      for (const companyUpdater of companyUpdaters) {
-        logger.log(
-          `[Service-TC] Applying rate to company ${companyUpdater.companyDB} for ${formatDate(targetDate)}.`
+      try {
+        await companyUpdater.updater.updateRate(targetDate, todayRate.rate);
+        updates.push({
+          companyDB: companyUpdater.companyDB,
+          date: formatDate(targetDate),
+          rate: todayRate.rate
+        });
+      } catch (error: unknown) {
+        logger.error(
+          `[Service-TC] Failed to update company ${companyUpdater.companyDB} for ${formatDate(targetDate)}.`,
+          error
         );
-
-        try {
-          await companyUpdater.updater.updateRate(targetDate, todayRate.rate);
-          updates.push({
-            companyDB: companyUpdater.companyDB,
-            date: formatDate(targetDate),
-            rate: todayRate.rate
-          });
-        } catch (error: unknown) {
-          logger.error(
-            `[Service-TC] Failed to update company ${companyUpdater.companyDB} for ${formatDate(targetDate)}.`,
-            error
-          );
-          errors.push({
-            companyDB: companyUpdater.companyDB,
-            date: formatDate(targetDate),
-            rate: todayRate.rate,
-            error: formatError(error)
-          });
-        }
+        errors.push({
+          companyDB: companyUpdater.companyDB,
+          date: formatDate(targetDate),
+          rate: todayRate.rate,
+          error: formatError(error)
+        });
       }
     }
-  } else {
-    logger.log('[Service-TC] No BCCR rate found for today. No updates were applied.');
   }
+
+  const rateCount = Array.from(ratesByProvider.values()).reduce((total, rates) => total + rates.length, 0);
 
   const summary: ExchangeRateSyncSummary = {
     fromDate: formatDate(today),
     toDate: formatDate(toDate),
-    rateCount: rates.length,
+    rateCount,
     companyCount: companyUpdaters.length,
     updateCount: updates.length,
     errorCount: errors.length,

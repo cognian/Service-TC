@@ -7,7 +7,22 @@ export interface SapCompanyCredentials {
   sapCompanyDB: string;
   sapUsername: string;
   sapPassword: string;
+  exchangeRateProvider: string;
 }
+
+export interface BccrExchangeRateProviderConfig {
+  type: 'bccr';
+  webServiceUrl: string;
+  apiToken: string;
+}
+
+export interface HnbExchangeRateProviderConfig {
+  type: 'hnb';
+  webServiceUrl: string;
+  apiToken: string;
+}
+
+export type ExchangeRateProviderConfig = BccrExchangeRateProviderConfig | HnbExchangeRateProviderConfig;
 
 export interface NotificationEmailConfig {
   host: string;
@@ -25,11 +40,10 @@ export interface NotificationEmailConfig {
 export interface AppConfig {
   scheduleTime: string;
   forecastDays: number;
-  bccrWebServiceUrl?: string;
-  bccrApiToken?: string;
   sapSignInUrl?: string;
   sapUpdateUrl?: string;
   sapCompanies: SapCompanyCredentials[];
+  exchangeRateProviders: Record<string, ExchangeRateProviderConfig>;
   notificationEmail?: NotificationEmailConfig;
 }
 
@@ -50,7 +64,10 @@ function parseCompaniesJson(envValue: string): SapCompanyCredentials[] {
   return parsed as SapCompanyCredentials[];
 }
 
-function validateCompanies(companies: SapCompanyCredentials[]): SapCompanyCredentials[] {
+function validateCompanies(
+  companies: SapCompanyCredentials[],
+  exchangeRateProviders: Record<string, ExchangeRateProviderConfig>
+): SapCompanyCredentials[] {
   if (!Array.isArray(companies) || companies.length === 0) {
     throw new Error('At least one SAP company must be configured in sapCompanies.');
   }
@@ -61,9 +78,59 @@ function validateCompanies(companies: SapCompanyCredentials[]): SapCompanyCreden
         `Invalid sapCompanies[${index}]. Each company requires sapCompanyDB, sapUsername, and sapPassword.`
       );
     }
+
+    if (!company?.exchangeRateProvider || typeof company.exchangeRateProvider !== 'string') {
+      throw new Error(
+        `Invalid sapCompanies[${index}]. exchangeRateProvider must reference a key in exchangeRateProviders.`
+      );
+    }
+
+    if (!exchangeRateProviders[company.exchangeRateProvider]) {
+      throw new Error(
+        `Invalid sapCompanies[${index}]. exchangeRateProvider "${company.exchangeRateProvider}" is not defined in exchangeRateProviders.`
+      );
+    }
   });
 
   return companies;
+}
+
+function validateExchangeRateProviders(value: unknown): Record<string, ExchangeRateProviderConfig> {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('exchangeRateProviders must be an object mapping provider keys to their configuration.');
+  }
+
+  const providers: Record<string, ExchangeRateProviderConfig> = {};
+
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof raw !== 'object' || raw === null) {
+      throw new Error(`exchangeRateProviders.${key} must be an object.`);
+    }
+
+    const providerConfig = raw as Record<string, unknown>;
+
+    if (providerConfig.type === 'bccr') {
+      const webServiceUrl = typeof providerConfig.webServiceUrl === 'string' ? providerConfig.webServiceUrl : '';
+      const apiToken = typeof providerConfig.apiToken === 'string' ? providerConfig.apiToken : '';
+      if (!webServiceUrl || !apiToken) {
+        throw new Error(`exchangeRateProviders.${key} of type "bccr" requires webServiceUrl and apiToken.`);
+      }
+
+      providers[key] = { type: 'bccr', webServiceUrl, apiToken };
+    } else if (providerConfig.type === 'hnb') {
+      const webServiceUrl = typeof providerConfig.webServiceUrl === 'string' ? providerConfig.webServiceUrl : '';
+      const apiToken = typeof providerConfig.apiToken === 'string' ? providerConfig.apiToken : '';
+      if (!webServiceUrl || !apiToken) {
+        throw new Error(`exchangeRateProviders.${key} of type "hnb" requires webServiceUrl and apiToken.`);
+      }
+
+      providers[key] = { type: 'hnb', webServiceUrl, apiToken };
+    } else {
+      throw new Error(`exchangeRateProviders.${key} has unsupported type "${String(providerConfig.type)}".`);
+    }
+  }
+
+  return providers;
 }
 
 function normalizeRecipientList(value: unknown, fieldName: string, required: boolean): string[] {
@@ -143,8 +210,6 @@ export function loadConfig(): AppConfig {
 
   const scheduleTime = process.env.SCHEDULE_TIME || fileConfig.scheduleTime || '06:00';
   const forecastDays = Number(process.env.FORECAST_DAYS ?? fileConfig.forecastDays ?? 5);
-  const bccrWebServiceUrl = process.env.BCCR_WEB_SERVICE_URL || fileConfig.bccrWebServiceUrl;
-  const bccrApiToken = process.env.BCCR_API_TOKEN || fileConfig.bccrApiToken;
   const sapSignInUrl = process.env.SAP_SIGN_IN_URL || fileConfig.sapSignInUrl;
   const sapUpdateUrl = process.env.SAP_UPDATE_URL || fileConfig.sapUpdateUrl;
   const notificationEmail = validateNotificationEmailConfig(
@@ -152,6 +217,28 @@ export function loadConfig(): AppConfig {
       ? JSON.parse(process.env.NOTIFICATION_EMAIL_JSON)
       : fileConfig.notificationEmail
   );
+
+  const exchangeRateProviders = validateExchangeRateProviders(
+    process.env.EXCHANGE_RATE_PROVIDERS_JSON
+      ? JSON.parse(process.env.EXCHANGE_RATE_PROVIDERS_JSON)
+      : fileConfig.exchangeRateProviders ?? {}
+  );
+
+  if (exchangeRateProviders.bccr?.type === 'bccr') {
+    exchangeRateProviders.bccr = {
+      type: 'bccr',
+      webServiceUrl: process.env.BCCR_WEB_SERVICE_URL || exchangeRateProviders.bccr.webServiceUrl,
+      apiToken: process.env.BCCR_API_TOKEN || exchangeRateProviders.bccr.apiToken
+    };
+  }
+
+  if (exchangeRateProviders.hnb?.type === 'hnb') {
+    exchangeRateProviders.hnb = {
+      type: 'hnb',
+      webServiceUrl: process.env.HNB_WEB_SERVICE_URL || exchangeRateProviders.hnb.webServiceUrl,
+      apiToken: process.env.HNB_API_TOKEN || exchangeRateProviders.hnb.apiToken
+    };
+  }
 
   const envCompanies = process.env.SAP_COMPANIES_JSON
     ? parseCompaniesJson(process.env.SAP_COMPANIES_JSON)
@@ -163,7 +250,8 @@ export function loadConfig(): AppConfig {
           {
             sapCompanyDB: process.env.SAP_COMPANY_DB,
             sapUsername: process.env.SAP_USERNAME,
-            sapPassword: process.env.SAP_PASSWORD
+            sapPassword: process.env.SAP_PASSWORD,
+            exchangeRateProvider: 'bccr'
           }
         ]
       : undefined;
@@ -176,13 +264,15 @@ export function loadConfig(): AppConfig {
           {
             sapCompanyDB: String((fileConfig as Record<string, unknown>).sapCompanyDB),
             sapUsername: String((fileConfig as Record<string, unknown>).sapUsername),
-            sapPassword: String((fileConfig as Record<string, unknown>).sapPassword)
+            sapPassword: String((fileConfig as Record<string, unknown>).sapPassword),
+            exchangeRateProvider: 'bccr'
           }
         ]
       : undefined;
 
   const sapCompanies = validateCompanies(
-    envCompanies ?? fileConfig.sapCompanies ?? legacyCompanyFromEnv ?? legacyCompanyFromFile ?? []
+    envCompanies ?? fileConfig.sapCompanies ?? legacyCompanyFromEnv ?? legacyCompanyFromFile ?? [],
+    exchangeRateProviders
   );
 
   if (!Number.isInteger(forecastDays) || forecastDays < 0) {
@@ -192,11 +282,10 @@ export function loadConfig(): AppConfig {
   return {
     scheduleTime,
     forecastDays,
-    bccrWebServiceUrl,
-    bccrApiToken,
     sapSignInUrl,
     sapUpdateUrl,
     sapCompanies,
+    exchangeRateProviders,
     notificationEmail
   };
 }
