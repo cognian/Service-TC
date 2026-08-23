@@ -85,6 +85,12 @@ export async function executeExchangeRateSync({
       logger.log(
         `[Service-TC] No exchange rate found for today for company ${companyUpdater.companyDB}. No updates were applied.`
       );
+      errors.push({
+        companyDB: companyUpdater.companyDB,
+        date: formatDate(today),
+        rate: null,
+        error: 'No exchange rate found for today. No updates were applied.'
+      });
       continue;
     }
 

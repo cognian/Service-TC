@@ -153,3 +153,58 @@ test('executeExchangeRateSync continues after update errors and reports failures
 
   assert.equal(successfulUpdates.length, 3);
 });
+
+test('executeExchangeRateSync reports companies with no exchange rate and does not update them', async () => {
+  let updateCalled = false;
+  let sentSummary: { errorCount: number; errors: Array<{ companyDB: string; rate: number | null; error: string }> } | undefined;
+
+  const summary = await executeExchangeRateSync({
+    forecastDays: 0,
+    now: new Date('2026-07-25T12:00:00.000Z'),
+    companyUpdaters: [
+      {
+        companyDB: 'SBODEMO_NO_RATE',
+        provider: {
+          async fetchExchangeRate() {
+            return [];
+          }
+        },
+        updater: {
+          async updateRate(): Promise<void> {
+            updateCalled = true;
+          }
+        }
+      }
+    ],
+    notificationEmail: {
+      host: 'smtp.example.com',
+      port: 587,
+      secure: false,
+      from: 'service@example.com',
+      to: ['ops@example.com'],
+      ccs: [],
+      bccs: []
+    },
+    logger: {
+      log(): void {},
+      error(): void {}
+    },
+    notificationEmailSender: {
+      async send(_config, notificationSummary) {
+        sentSummary = notificationSummary;
+      }
+    }
+  });
+
+  assert.equal(updateCalled, false);
+  assert.equal(summary.updateCount, 0);
+  assert.equal(summary.errorCount, 1);
+  assert.deepEqual(summary.errors[0], {
+    companyDB: 'SBODEMO_NO_RATE',
+    date: '2026-07-25',
+    rate: null,
+    error: 'No exchange rate found for today. No updates were applied.'
+  });
+  assert.equal(sentSummary?.errorCount, 1);
+  assert.equal(sentSummary?.errors[0].companyDB, 'SBODEMO_NO_RATE');
+});

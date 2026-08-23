@@ -14,7 +14,7 @@ export interface ExchangeRateSyncSummary {
   errors: Array<{
     companyDB: string;
     date: string;
-    rate: number;
+    rate: number | null;
     error: string;
   }>;
 }

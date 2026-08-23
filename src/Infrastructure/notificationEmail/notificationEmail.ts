@@ -42,7 +42,7 @@ function buildSummaryText(summary: ExchangeRateSyncSummary): string {
     lines.push('Failed updates:');
     for (const failedUpdate of summary.errors) {
       lines.push(
-        `- ${failedUpdate.companyDB} | ${failedUpdate.date} | ${failedUpdate.rate} | ${failedUpdate.error}`
+        `- ${failedUpdate.companyDB} | ${failedUpdate.date} | ${failedUpdate.rate ?? 'N/A'} | ${failedUpdate.error}`
       );
     }
   }
@@ -118,7 +118,7 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
               <tr>
                 <td>${escapeHtml(failedUpdate.companyDB)}</td>
                 <td>${escapeHtml(failedUpdate.date)}</td>
-                <td>${failedUpdate.rate}</td>
+                <td>${failedUpdate.rate ?? 'N/A'}</td>
                 <td>${escapeHtml(failedUpdate.error)}</td>
               </tr>`
           )
