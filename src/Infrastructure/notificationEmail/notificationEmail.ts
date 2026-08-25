@@ -12,6 +12,7 @@ interface CompanySummaryRow {
   firstDate: string;
   lastDate: string;
   latestRate: number;
+  isStale: boolean;
 }
 
 function buildSummaryText(summary: ExchangeRateSyncSummary): string {
@@ -34,7 +35,8 @@ function buildSummaryText(summary: ExchangeRateSyncSummary): string {
 
   lines.push('Applied updates:');
   for (const update of summary.updates) {
-    lines.push(`- ${update.companyDB} | ${update.date} | ${update.rate}`);
+    const staleMarker = update.isStale ? ' (WARNING: rate not from the latest day)' : '';
+    lines.push(`- ${update.companyDB} | ${update.date} | ${update.rate}${staleMarker}`);
   }
 
   if (summary.errors.length > 0) {
@@ -70,7 +72,8 @@ function buildCompanySummaryRows(summary: ExchangeRateSyncSummary): CompanySumma
         updateCount: 1,
         firstDate: update.date,
         lastDate: update.date,
-        latestRate: update.rate
+        latestRate: update.rate,
+        isStale: Boolean(update.isStale)
       });
       continue;
     }
@@ -82,6 +85,7 @@ function buildCompanySummaryRows(summary: ExchangeRateSyncSummary): CompanySumma
     if (update.date > existing.lastDate) {
       existing.lastDate = update.date;
       existing.latestRate = update.rate;
+      existing.isStale = Boolean(update.isStale);
     }
   }
 
@@ -104,7 +108,9 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
                 <td>${row.updateCount}</td>
                 <td>${escapeHtml(row.firstDate)}</td>
                 <td>${escapeHtml(row.lastDate)}</td>
-                <td>${row.latestRate}</td>
+                <td class="${row.isStale ? 'rate-warning' : ''}">${row.latestRate}${
+                  row.isStale ? ' &#9888; not the latest day' : ''
+                }</td>
               </tr>`
           )
           .join('');
@@ -230,6 +236,11 @@ function buildSummaryHtml(summary: ExchangeRateSyncSummary): string {
       .empty-row {
         text-align: center;
         color: #64748b;
+      }
+
+      .rate-warning {
+        color: #b45309;
+        font-weight: 700;
       }
 
       .footer {

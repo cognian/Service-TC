@@ -6,6 +6,8 @@ interface HnbIndicadorItem {
   Valor: number;
 }
 
+const LOOKBACK_DAYS = 5;
+
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -17,9 +19,14 @@ export class HnbExchangeRateProvider implements IExchangeRateProvider {
   ) {}
 
   async fetchExchangeRate(from: Date, to: Date): Promise<ExchangeRatePoint[]> {
+    // HNB can be a few days late publishing a rate, so look back further and use the most recent one.
+    const lookbackStart = new Date(to);
+    lookbackStart.setUTCDate(lookbackStart.getUTCDate() - LOOKBACK_DAYS);
+    const fechaInicio = from < lookbackStart ? from : lookbackStart;
+
     const requestUrl = new URL(this.serviceUrl);
     requestUrl.searchParams.set('formato', 'Json');
-    requestUrl.searchParams.set('fechaInicio', formatDate(from));
+    requestUrl.searchParams.set('fechaInicio', formatDate(fechaInicio));
     requestUrl.searchParams.set('fechaFinal', formatDate(to));
 
     const response = await fetch(requestUrl, {
@@ -35,16 +42,27 @@ export class HnbExchangeRateProvider implements IExchangeRateProvider {
 
     const payload = (await response.json()) as HnbIndicadorItem[];
 
-    return payload.map((item) => {
-      const rate = Number(item.Valor);
-      if (!Number.isFinite(rate)) {
-        throw new Error(`Invalid HNB exchange rate value for date ${item.Fecha}.`);
-      }
+    const points = payload
+      .map((item) => {
+        const rate = Number(item.Valor);
+        if (!Number.isFinite(rate)) {
+          throw new Error(`Invalid HNB exchange rate value for date ${item.Fecha}.`);
+        }
 
-      return {
-        date: new Date(`${item.Fecha.slice(0, 10)}T00:00:00.000Z`),
-        rate
-      };
-    });
+        return {
+          date: new Date(`${item.Fecha.slice(0, 10)}T00:00:00.000Z`),
+          rate
+        };
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    if (points.length === 0) {
+      return [];
+    }
+
+    const latest = points[points.length - 1];
+    const isStale = formatDate(latest.date) !== formatDate(to);
+
+    return [{ ...latest, isStale }];
   }
 }

@@ -106,7 +106,8 @@ export async function executeExchangeRateSync({
         updates.push({
           companyDB: companyUpdater.companyDB,
           date: formatDate(targetDate),
-          rate: todayRate.rate
+          rate: todayRate.rate,
+          isStale: todayRate.isStale
         });
       } catch (error: unknown) {
         logger.error(

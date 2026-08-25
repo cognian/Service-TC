@@ -10,6 +10,7 @@ export interface ExchangeRateSyncSummary {
     companyDB: string;
     date: string;
     rate: number;
+    isStale?: boolean;
   }>;
   errors: Array<{
     companyDB: string;
