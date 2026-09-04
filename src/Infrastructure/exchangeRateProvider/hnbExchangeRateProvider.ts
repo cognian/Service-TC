@@ -19,15 +19,15 @@ export class HnbExchangeRateProvider implements IExchangeRateProvider {
   ) {}
 
   async fetchExchangeRate(from: Date, to: Date): Promise<ExchangeRatePoint[]> {
-    // HNB can be a few days late publishing a rate, so look back further and use the most recent one.
-    const lookbackStart = new Date(to);
-    lookbackStart.setUTCDate(lookbackStart.getUTCDate() - LOOKBACK_DAYS);
-    const fechaInicio = from < lookbackStart ? from : lookbackStart;
+    const fechaInicio = new Date(from);
+    fechaInicio.setUTCDate(fechaInicio.getUTCDate() - LOOKBACK_DAYS);
+    const fechaFinal = new Date(to);
+    fechaFinal.setUTCDate(fechaFinal.getUTCDate() + LOOKBACK_DAYS);
 
     const requestUrl = new URL(this.serviceUrl);
     requestUrl.searchParams.set('formato', 'Json');
     requestUrl.searchParams.set('fechaInicio', formatDate(fechaInicio));
-    requestUrl.searchParams.set('fechaFinal', formatDate(to));
+    requestUrl.searchParams.set('fechaFinal', formatDate(fechaFinal));
 
     const response = await fetch(requestUrl, {
       method: 'GET',
@@ -60,9 +60,10 @@ export class HnbExchangeRateProvider implements IExchangeRateProvider {
       return [];
     }
 
-    const latest = points[points.length - 1];
-    const isStale = formatDate(latest.date) !== formatDate(to);
+    const today = points.find((point) => formatDate(point.date) === formatDate(to));
+    const selected = today ?? points[points.length - 1];
+    const isStale = formatDate(selected.date) !== formatDate(to);
 
-    return [{ ...latest, isStale }];
+    return [{ ...selected, isStale }];
   }
 }
