@@ -5,8 +5,18 @@ import { createExchangeRateProvider } from '../Infrastructure/exchangeRateProvid
 import { SapServiceLayerRateUpdater } from '../Infrastructure/exchangeRateUpdater/sapServiceLayerRateUpdater';
 import { millisecondsUntilNextRun, scheduleDailyTask } from './scheduler';
 
+function getConfigPath(): string | undefined {
+  const serviceOptions = process.argv.find((argument) => argument.startsWith('--scriptoptions='));
+  if (serviceOptions) {
+    return serviceOptions.slice('--scriptoptions='.length).replace(/^"|"$/g, '');
+  }
+
+  const directConfigPath = process.argv[2];
+  return directConfigPath?.startsWith('--') ? undefined : directConfigPath;
+}
+
 async function main(): Promise<void> {
-  const config = loadConfig(process.argv[2]);
+  const config = loadConfig(getConfigPath());
 
   if (
     !config.sapSignInUrl ||

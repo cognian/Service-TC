@@ -123,15 +123,16 @@ npm install
 npm run package:win
 ```
 
-The output is `dist/Service-TC.exe` plus `dist/Service-TC-install.exe`. Copy both executables and an external `config.json` to the deployment directory. The first executable runs the synchronization process; the second installs and manages it as a Windows service:
+The output includes `dist/Service-TC.exe`, `dist/Service-TC-run-once.exe`, and `dist/Service-TC-install.exe`. Copy these executables and an external `config.json` to the deployment directory. The first executable runs continuously on its daily schedule, the second executes one synchronization and exits, and the third installs and manages the scheduled process as a Windows service:
 
 ```powershell
-.\Service-TC-install.exe install .\config.json
+.\Service-TC-install.exe install
 .\Service-TC-install.exe stop
 .\Service-TC-install.exe start
 .\Service-TC-install.exe uninstall
+.\Service-TC-run-once.exe .\config.json
 ```
 
 Both executables contain the Node.js runtime. Configuration and secrets are intentionally not embedded in them; use `config.json` or the documented environment variables.
 
-The installer uses `node-windows` to register a WinSW service wrapper whose executable is `Service-TC.exe`; Node.js is not required on the target machine. Run installation from an elevated PowerShell or Command Prompt. The generated service wrapper files are installed by `node-windows` alongside the service.
+The packaged installer extracts WinSW beside the executables and registers a service whose executable is `Service-TC.exe`; Node.js is not required on the target machine. Run installation from an elevated PowerShell or Command Prompt. Unless you pass a configuration path explicitly, `config.json` must be in the same directory as the three executables.

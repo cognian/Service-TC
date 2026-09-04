@@ -10,9 +10,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:bundle": "esbuild src/EntryPoint/index.ts --bundle --platform=node --format=cjs --target=node22 --outfile=dist/EntryPoint/bundle.cjs",
+    "build:bundle:run-once": "esbuild src/EntryPoint/index2.ts --bundle --platform=node --format=cjs --target=node18 --outfile=dist/EntryPoint/run-once.cjs",
     "package:win:process": "npm run build:bundle && pkg dist/EntryPoint/bundle.cjs --targets node18-win-x64 --output dist/Service-TC.exe",
-    "package:win:installer": "npm run build && pkg dist/EntryPoint/windowsService.js --targets node18-win-x64 --output dist/Service-TC-install.exe --assets \"node_modules/node-windows/**/*\"",
-    "package:win": "npm run package:win:process && npm run package:win:installer",
+    "package:win:run-once": "npm run build:bundle:run-once && pkg dist/EntryPoint/run-once.cjs --targets node18-win-x64 --output dist/Service-TC-run-once.exe",
+    "package:win:installer": "npm run build && pkg --config package.json dist/EntryPoint/windowsService.js --targets node18-win-x64 --output dist/Service-TC-install.exe",
+    "package:win": "npm run package:win:process && npm run package:win:run-once && npm run package:win:installer",
     "start": "npm run build && node dist/EntryPoint/index.js",
     "start:dev": "tsx src/EntryPoint/index2.ts",
     "test": "tsx --test test/*.test.ts",
@@ -33,5 +35,11 @@
   "dependencies": {
     "node-windows": "^1.0.0-beta.8",
     "nodemailer": "^9.0.3"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/node-windows/bin/winsw/winsw.exe",
+      "node_modules/node-windows/bin/winsw/winsw.exe.config"
+    ]
   }
 }
