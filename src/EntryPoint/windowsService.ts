@@ -4,6 +4,7 @@ interface ServiceOptions {
   name: string;
   description: string;
   script: string;
+  execPath?: string;
   scriptOptions?: string;
   workingDirectory: string;
   wait: number;
@@ -29,13 +30,18 @@ function quoteCommandLineArgument(value: string): string {
 
 function createService(configPath: string): WindowsService {
   const nodeWindows = require('node-windows') as NodeWindowsModule;
+  const packagedInstaller = 'pkg' in process;
+  const processPath = packagedInstaller
+    ? path.resolve(path.dirname(process.execPath), 'Service-TC.exe')
+    : path.resolve(__dirname, 'index.js');
 
   return new nodeWindows.Service({
     name: process.env.SERVICE_NAME || 'Service-TC',
     description:
       process.env.SERVICE_DESCRIPTION ||
       'Daily exchange-rate synchronization service for SAP Service Layer.',
-    script: path.resolve(__dirname, 'index.js'),
+    script: processPath,
+    ...(packagedInstaller ? { execPath: processPath } : {}),
     scriptOptions: quoteCommandLineArgument(configPath),
     workingDirectory: path.resolve(__dirname, '..'),
     wait: 1,

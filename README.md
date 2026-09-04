@@ -113,3 +113,25 @@ Notes:
 - Optional environment variables to customize service metadata:
   - `SERVICE_NAME` (default: `Service-TC`)
   - `SERVICE_DESCRIPTION` (default: daily exchange-rate synchronization description)
+
+## Single-file Windows executable
+
+Build a self-contained Windows x64 executable with Node.js 18 or newer and internet access:
+
+```bash
+npm install
+npm run package:win
+```
+
+The output is `dist/Service-TC.exe` plus `dist/Service-TC-install.exe`. Copy both executables and an external `config.json` to the deployment directory. The first executable runs the synchronization process; the second installs and manages it as a Windows service:
+
+```powershell
+.\Service-TC-install.exe install .\config.json
+.\Service-TC-install.exe stop
+.\Service-TC-install.exe start
+.\Service-TC-install.exe uninstall
+```
+
+Both executables contain the Node.js runtime. Configuration and secrets are intentionally not embedded in them; use `config.json` or the documented environment variables.
+
+The installer uses `node-windows` to register a WinSW service wrapper whose executable is `Service-TC.exe`; Node.js is not required on the target machine. Run installation from an elevated PowerShell or Command Prompt. The generated service wrapper files are installed by `node-windows` alongside the service.

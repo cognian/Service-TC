@@ -4,8 +4,15 @@
   "private": true,
   "description": "Node application designed to run as a Windows service and call a web service daily.",
   "main": "dist/EntryPoint/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:bundle": "esbuild src/EntryPoint/index.ts --bundle --platform=node --format=cjs --target=node22 --outfile=dist/EntryPoint/bundle.cjs",
+    "package:win:process": "npm run build:bundle && pkg dist/EntryPoint/bundle.cjs --targets node18-win-x64 --output dist/Service-TC.exe",
+    "package:win:installer": "npm run build && pkg dist/EntryPoint/windowsService.js --targets node18-win-x64 --output dist/Service-TC-install.exe --assets \"node_modules/node-windows/**/*\"",
+    "package:win": "npm run package:win:process && npm run package:win:installer",
     "start": "npm run build && node dist/EntryPoint/index.js",
     "start:dev": "tsx src/EntryPoint/index2.ts",
     "test": "tsx --test test/*.test.ts",
@@ -18,6 +25,8 @@
   "devDependencies": {
     "@types/node": "^22.18.0",
     "@types/nodemailer": "^8.0.1",
+    "@yao-pkg/pkg": "6.10.0",
+    "esbuild": "^0.28.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   },
